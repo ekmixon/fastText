@@ -33,13 +33,13 @@ def load_transform(fname, d1=300, d2=300):
     R = np.zeros([d1, d2])
     for i, line in enumerate(fin):
         tokens = line.split(' ')
-        R[i, :] = np.array(tokens[0:d2], dtype=float)
+        R[i, :] = np.array(tokens[:d2], dtype=float)
     return R
 
 
 ###### MAIN ######
 
-print("Evaluation of alignment on %s" % params.dico_test)
+print(f"Evaluation of alignment on {params.dico_test}")
 if params.nomatch:
     print("running without exact string matches")
 

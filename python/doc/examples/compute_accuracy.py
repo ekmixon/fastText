@@ -28,12 +28,7 @@ def process_question(question, cossims, model, words, vectors):
         # We lowercase all words to correspond to the preprocessing
         # we applied to our data.
         qwords = [x.lower().strip() for x in qwords]
-        # If one of the words is not in the vocabulary we skip this question
-        found = True
-        for w in qwords:
-            if w not in words:
-                found = False
-                break
+        found = all(w in words for w in qwords)
         if not found:
             continue
         # The first three words form the query
@@ -119,13 +114,12 @@ if __name__ == "__main__":
     total_sy_correct = 0
     total_sy_qs = 0
 
-    qid = 0
     questions = []
     with open(args.question_words, 'r') as fqw:
         questions = fqw.read().split(':')[1:]
     # For efficiency preallocate the memory to calculate cosine similarities
     cossims = np.zeros(len(words), dtype=float)
-    for question in questions:
+    for qid, question in enumerate(questions):
         quads = question.split('\n')
         question = quads[0].strip()
         quads = quads[1:-1]
@@ -151,8 +145,6 @@ if __name__ == "__main__":
             total_se_correct / float(total_se_qs) if total_se_qs > 0 else 0,
             total_sy_correct / float(total_sy_qs) if total_sy_qs > 0 else 0,
         )
-        qid += 1
-
     print(
         "Questions seen / total: {0} {1}   {2:.2f} %".
         format(

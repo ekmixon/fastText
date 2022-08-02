@@ -49,44 +49,38 @@ parser.add_argument(
 args = parser.parse_args()
 
 vectors = {}
-fin = open(args.modelPath, 'rb')
-for _, line in enumerate(fin):
-    try:
-        tab = compat_splitting(line)
-        vec = np.array(tab[1:], dtype=float)
-        word = tab[0]
-        if np.linalg.norm(vec) == 0:
+with open(args.modelPath, 'rb') as fin:
+    for line in fin:
+        try:
+            tab = compat_splitting(line)
+            vec = np.array(tab[1:], dtype=float)
+            word = tab[0]
+            if np.linalg.norm(vec) == 0:
+                continue
+            if word not in vectors:
+                vectors[word] = vec
+        except ValueError:
             continue
-        if not word in vectors:
-            vectors[word] = vec
-    except ValueError:
-        continue
-    except UnicodeDecodeError:
-        continue
-fin.close()
-
 mysim = []
 gold = []
 drop = 0.0
 nwords = 0.0
 
-fin = open(args.dataPath, 'rb')
-for line in fin:
-    tline = compat_splitting(line)
-    word1 = tline[0].lower()
-    word2 = tline[1].lower()
-    nwords = nwords + 1.0
+with open(args.dataPath, 'rb') as fin:
+    for line in fin:
+        tline = compat_splitting(line)
+        word1 = tline[0].lower()
+        word2 = tline[1].lower()
+        nwords = nwords + 1.0
 
-    if (word1 in vectors) and (word2 in vectors):
-        v1 = vectors[word1]
-        v2 = vectors[word2]
-        d = similarity(v1, v2)
-        mysim.append(d)
-        gold.append(float(tline[2]))
-    else:
-        drop = drop + 1.0
-fin.close()
-
+        if (word1 in vectors) and (word2 in vectors):
+            v1 = vectors[word1]
+            v2 = vectors[word2]
+            d = similarity(v1, v2)
+            mysim.append(d)
+            gold.append(float(tline[2]))
+        else:
+            drop = drop + 1.0
 corr = stats.spearmanr(mysim, gold)
 dataset = os.path.basename(args.dataPath)
 print(

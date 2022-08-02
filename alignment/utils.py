@@ -12,7 +12,7 @@ import collections
 
 def load_vectors(fname, maxload=200000, norm=True, center=False, verbose=True):
     if verbose:
-        print("Loading vectors from %s" % fname)
+        print(f"Loading vectors from {fname}")
     fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
     if maxload > 0:
@@ -49,7 +49,12 @@ def save_vectors(fname, x, words):
     fout = io.open(fname, 'w', encoding='utf-8')
     fout.write(u"%d %d\n" % (n, d))
     for i in range(n):
-        fout.write(words[i] + " " + " ".join(map(lambda a: "%.4f" % a, x[i, :])) + "\n")
+        fout.write(
+            f"{words[i]} "
+            + " ".join(map(lambda a: "%.4f" % a, x[i, :]))
+            + "\n"
+        )
+
     fout.close()
 
 
@@ -148,7 +153,7 @@ def compute_csls_accuracy(x_src, x_tgt, lexicon, lexicon_size=-1, k=10, bsz=1024
 
     nn = np.argmax(similarities, axis=1).tolist()
     correct = 0.0
-    for k in range(0, len(lexicon)):
+    for k in range(len(lexicon)):
         if nn[k] in lexicon[idx_src[k]]:
             correct += 1.0
     return correct / lexicon_size

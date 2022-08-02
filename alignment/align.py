@@ -104,7 +104,7 @@ sys.stdout.flush()
 fold, Rold = 0, []
 niter, lr = params.niter, params.lr
 
-for it in range(0, niter + 1):
+for it in range(niter + 1):
     if lr < 1e-4:
         break
 
@@ -137,9 +137,9 @@ nnacc = compute_nn_accuracy(np.dot(x_src, R.T), x_tgt, src2tgt, lexicon_size=lex
 print("[final] NN = %.4f - Coverage = %.4f" % (nnacc, len(src2tgt) / lexicon_size))
 
 if params.output != "":
-    print("Saving all aligned vectors at %s" % params.output)
+    print(f"Saving all aligned vectors at {params.output}")
     words_full, x_full = load_vectors(params.src_emb, maxload=-1, center=params.center, verbose=False)
     x = np.dot(x_full, R.T)
     x /= np.linalg.norm(x, axis=1)[:, np.newaxis] + 1e-8
     save_vectors(params.output, x, words_full)
-    save_matrix(params.output + "-mat",  R)
+    save_matrix(f"{params.output}-mat", R)

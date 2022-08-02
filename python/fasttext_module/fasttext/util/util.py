@@ -144,14 +144,14 @@ def _print_progress(downloaded_bytes, total_size):
 
 
 def _download_file(url, write_file_name, chunk_size=2**13):
-    print("Downloading %s" % url)
+    print(f"Downloading {url}")
     response = urlopen(url)
     if hasattr(response, 'getheader'):
         file_size = int(response.getheader('Content-Length').strip())
     else:
         file_size = int(response.info().getheader('Content-Length').strip())
     downloaded = 0
-    download_file_name = write_file_name + ".part"
+    download_file_name = f"{write_file_name}.part"
     with open(download_file_name, 'wb') as f:
         while True:
             chunk = response.read(chunk_size)
@@ -171,10 +171,7 @@ def _download_gz_model(gz_file_name, if_exists):
         elif if_exists == 'strict':
             print("gzip File exists. Use --overwrite to download anyway.")
             return False
-        elif if_exists == 'overwrite':
-            pass
-
-    url = "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/%s" % gz_file_name
+    url = f"https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/{gz_file_name}"
     _download_file(url, gz_file_name)
 
     return True
@@ -186,11 +183,10 @@ def download_model(lang_id, if_exists='strict', dimension=None):
         https://fasttext.cc/docs/en/crawl-vectors.html
     """
     if lang_id not in valid_lang_ids:
-        raise Exception("Invalid lang id. Please select among %s" %
-                        repr(valid_lang_ids))
+        raise Exception(f"Invalid lang id. Please select among {repr(valid_lang_ids)}")
 
-    file_name = "cc.%s.300.bin" % lang_id
-    gz_file_name = "%s.gz" % file_name
+    file_name = f"cc.{lang_id}.300.bin"
+    gz_file_name = f"{file_name}.gz"
 
     if os.path.isfile(file_name):
         if if_exists == 'ignore':
@@ -198,9 +194,6 @@ def download_model(lang_id, if_exists='strict', dimension=None):
         elif if_exists == 'strict':
             print("File exists. Use --overwrite to download anyway.")
             return
-        elif if_exists == 'overwrite':
-            pass
-
     if _download_gz_model(gz_file_name, if_exists):
         with gzip.open(gz_file_name, 'rb') as f:
             with open(file_name, 'wb') as f_out:

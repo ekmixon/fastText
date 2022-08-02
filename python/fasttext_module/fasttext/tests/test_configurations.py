@@ -39,18 +39,20 @@ def check_supervised_configurations(configurations, verbose=1):
 def flickr_job(thread=None):
     if thread is None:
         thread = max_thread()
-    config = {}
-    config["dataset"] = "YFCC100M"
-    config["args"] = {
-        "dim": 256,
-        "wordNgrams": 2,
-        "minCount": 10,
-        "bucket": 10000000,
-        "epoch": 20,
-        "loss": "hs",
-        "minCountLabel": 100,
-        "thread": thread
+    config = {
+        "dataset": "YFCC100M",
+        "args": {
+            "dim": 256,
+            "wordNgrams": 2,
+            "minCount": 10,
+            "bucket": 10000000,
+            "epoch": 20,
+            "loss": "hs",
+            "minCountLabel": 100,
+            "thread": thread,
+        },
     }
+
     config["args"]["input"] = "YFCC100M/train"
     config["quant_args"] = {
         "dsub": 2,
@@ -83,9 +85,11 @@ def flickr_job(thread=None):
 def langid_job1(thread=None):
     if thread is None:
         thread = max_thread()
-    config = {}
-    config["dataset"] = "langid"
-    config["args"] = {"dim": 16, "minn": 2, "maxn": 4, "thread": thread}
+    config = {
+        "dataset": "langid",
+        "args": {"dim": 16, "minn": 2, "maxn": 4, "thread": thread},
+    }
+
     config["args"]["input"] = "langid.train"
     config["quant_args"] = {"qnorm": True, "cutoff": 50000, "retrain": True}
     config["quant_args"]["input"] = config["args"]["input"]
@@ -118,15 +122,17 @@ def langid_job2(thread=None):
 def cooking_job1(thread=None):
     if thread is None:
         thread = max_thread()
-    config = {}
-    config["dataset"] = "cooking"
-    config["args"] = {
-        "epoch": 25,
-        "lr": 1.0,
-        "wordNgrams": 2,
-        "minCount": 1,
-        "thread": thread,
+    config = {
+        "dataset": "cooking",
+        "args": {
+            "epoch": 25,
+            "lr": 1.0,
+            "wordNgrams": 2,
+            "minCount": 1,
+            "thread": thread,
+        },
     }
+
     config["args"]["input"] = "cooking.train"
     config["quant_args"] = {"qnorm": True, "cutoff": 50000, "retrain": True}
     config["quant_args"]["input"] = config["args"]["input"]
@@ -201,14 +207,13 @@ def get_supervised_models(thread=None, verbose=1):
 
     configurations = []
     for i in range(len(sup_job_dataset)):
-        configuration = {}
-        configuration["dataset"] = sup_job_dataset[i]
+        configuration = {"dataset": sup_job_dataset[i]}
         args = sup_params.copy()
         quant_args = quant_params.copy()
         args["lr"] = sup_job_lr[i]
-        args["input"] = sup_job_dataset[i] + ".train"
+        args["input"] = f"{sup_job_dataset[i]}.train"
         quant_args["lr"] = sup_job_lr[i]
-        quant_args["input"] = sup_job_dataset[i] + ".train"
+        quant_args["input"] = f"{sup_job_dataset[i]}.train"
         configuration["args"] = args
         configuration["quant_args"] = quant_args
         test = {
@@ -216,23 +221,30 @@ def get_supervised_models(thread=None, verbose=1):
             "p1": sup_job_p1[i],
             "r1": sup_job_r1[i],
             "size": sup_job_size[i],
-            "data": sup_job_dataset[i] + ".test",
+            "data": f"{sup_job_dataset[i]}.test",
         }
+
         quant_test = {
             "n": sup_job_n[i],
             "p1": sup_job_quant_p1[i],
             "r1": sup_job_quant_r1[i],
             "size": sup_job_quant_size[i],
-            "data": sup_job_dataset[i] + ".test",
+            "data": f"{sup_job_dataset[i]}.test",
         }
+
         configuration["test"] = test
         configuration["quant_test"] = quant_test
         configurations.append(configuration)
-    configurations.append(flickr_job())
-    configurations.append(langid_job1())
-    configurations.append(langid_job2())
-    configurations.append(cooking_job1())
-    configurations.append(cooking_job2())
+    configurations.extend(
+        (
+            flickr_job(),
+            langid_job1(),
+            langid_job2(),
+            cooking_job1(),
+            cooking_job2(),
+        )
+    )
+
     configurations = check_supervised_configurations(
         configurations, verbose=verbose
     )

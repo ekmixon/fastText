@@ -34,10 +34,9 @@ def guess_target_name(model_file, initial_dim, target_dim):
     For example model_file name `cc.en.300.bin` with initial dim 300 becomes
     `cc.en.100.bin` when the `target_dim` is 100.
     """
-    prg = re.compile("(.*).%s.(.*)" % initial_dim)
-    m = prg.match(model_file)
-    if m:
-        return "%s.%d.%s" % (m.group(1), target_dim, m.group(2))
+    prg = re.compile(f"(.*).{initial_dim}.(.*)")
+    if m := prg.match(model_file):
+        return "%s.%d.%s" % (m[1], target_dim, m[2])
 
     sp_ext = os.path.splitext(model_file)
     return "%s.%d%s" % (sp_ext[0], target_dim, sp_ext[1])
@@ -71,7 +70,7 @@ def command_reduce(model_file, target_dim, if_exists):
 
     eprint("Saving model")
     ft.save_model(result_filename)
-    eprint("%s saved" % result_filename)
+    eprint(f"{result_filename} saved")
 
     return result_filename
 

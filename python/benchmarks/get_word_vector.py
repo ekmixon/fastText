@@ -23,17 +23,15 @@ def get_word_vector(data, model):
     with open(data, 'r') as f:
         tokens = tokenize(f.read())
     t2 = time.time()
-    print("Read TIME: " + str(t2 - t1))
-    print("Read NUM : " + str(len(tokens)))
+    print(f"Read TIME: {str(t2 - t1)}")
+    print(f"Read NUM : {len(tokens)}")
     f = load_model(model)
     # This is not equivalent to piping the data into
     # print-word-vector, because the data is tokenized
     # first.
     t3 = time.time()
-    i = 0
-    for t in tokens:
+    for i, t in enumerate(tokens, start=1):
         f.get_word_vector(t)
-        i += 1
         if i % 10000 == 0:
             sys.stderr.write("\ri: " + str(float(i / len(tokens))))
             sys.stderr.flush()

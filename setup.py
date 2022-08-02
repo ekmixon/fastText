@@ -63,10 +63,11 @@ fasttext_src_cc = list(
 
 ext_modules = [
     Extension(
-        str('fasttext_pybind'),
-        [
-            str('python/fasttext_module/fasttext/pybind/fasttext_pybind.cc'),
-        ] + fasttext_src_cc,
+        'fasttext_pybind',
+        (
+            ['python/fasttext_module/fasttext/pybind/fasttext_pybind.cc']
+            + fasttext_src_cc
+        ),
         include_dirs=[
             # Path to pybind11 headers
             get_pybind_include(),
@@ -75,9 +76,12 @@ ext_modules = [
             FASTTEXT_SRC,
         ],
         language='c++',
-        extra_compile_args=["-O0 -fno-inline -fprofile-arcs -pthread -march=native" if coverage else
-                            "-O3 -funroll-loops -pthread -march=native"],
-    ),
+        extra_compile_args=[
+            "-O0 -fno-inline -fprofile-arcs -pthread -march=native"
+            if coverage
+            else "-O3 -funroll-loops -pthread -march=native"
+        ],
+    )
 ]
 
 
@@ -129,9 +133,9 @@ class BuildExt(build_ext):
                 self.c_opts['unix'] += all_flags
             else:
                 raise RuntimeError(
-                    'libc++ is needed! Failed to compile with {} and {}.'.
-                    format(" ".join(all_flags), all_flags[0])
+                    f'libc++ is needed! Failed to compile with {" ".join(all_flags)} and {all_flags[0]}.'
                 )
+
         ct = self.compiler.compiler_type
         opts = self.c_opts.get(ct, [])
         extra_link_args = []
@@ -193,11 +197,7 @@ setup(
     ],
     install_requires=['pybind11>=2.2', "setuptools >= 0.7.0", "numpy"],
     cmdclass={'build_ext': BuildExt},
-    packages=[
-        str('fasttext'),
-        str('fasttext.util'),
-        str('fasttext.tests'),
-    ],
-    package_dir={str(''): str('python/fasttext_module')},
+    packages=['fasttext', 'fasttext.util', 'fasttext.tests'],
+    package_dir={'': 'python/fasttext_module'},
     zip_safe=False,
 )

@@ -44,5 +44,4 @@ if __name__ == "__main__":
         try:
             print(w + "\t" + str(f))
         except IOError as e:
-            if e.errno == errno.EPIPE:
-                pass
+            pass

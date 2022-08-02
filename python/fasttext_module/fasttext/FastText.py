@@ -32,9 +32,7 @@ class _Meter(object):
     def score_vs_true(self, label):
         """Return scores and the gold of each sample for a specific label"""
         label_id = self.f.get_label_id(label)
-        pair_list = self.m.scoreVsTrue(label_id)
-
-        if pair_list:
+        if pair_list := self.m.scoreVsTrue(label_id):
             y_scores, y_true = zip(*pair_list)
         else:
             y_scores, y_true = ([], ())
@@ -49,32 +47,24 @@ class _Meter(object):
         else:
             pair_list = self.m.precisionRecallCurve()
 
-        if pair_list:
-            precision, recall = zip(*pair_list)
-        else:
-            precision, recall = ([], ())
-
+        precision, recall = zip(*pair_list) if pair_list else ([], ())
         return np.array(precision, copy=False), np.array(recall, copy=False)
 
     def precision_at_recall(self, recall, label=None):
         """Return precision for a given recall"""
         if label:
             label_id = self.f.get_label_id(label)
-            precision = self.m.precisionAtRecallLabel(label_id, recall)
+            return self.m.precisionAtRecallLabel(label_id, recall)
         else:
-            precision = self.m.precisionAtRecall(recall)
-
-        return precision
+            return self.m.precisionAtRecall(recall)
 
     def recall_at_precision(self, precision, label=None):
         """Return recall for a given precision"""
         if label:
             label_id = self.f.get_label_id(label)
-            recall = self.m.recallAtPrecisionLabel(label_id, precision)
+            return self.m.recallAtPrecisionLabel(label_id, precision)
         else:
-            recall = self.m.recallAtPrecision(precision)
-
-        return recall
+            return self.m.recallAtPrecision(precision)
 
 
 class _FastText(object):
@@ -220,11 +210,7 @@ class _FastText(object):
         else:
             text = check(text)
             predictions = self.f.predict(text, k, threshold, on_unicode_error)
-            if predictions:
-                probs, labels = zip(*predictions)
-            else:
-                probs, labels = ([], ())
-
+            probs, labels = zip(*predictions) if predictions else ([], ())
             return labels, np.array(probs, copy=False)
 
     def get_input_matrix(self):
@@ -253,10 +239,7 @@ class _FastText(object):
         the function get_subwords.
         """
         pair = self.f.getVocab(on_unicode_error)
-        if include_freq:
-            return (pair[0], np.array(pair[1]))
-        else:
-            return pair[0]
+        return (pair[0], np.array(pair[1])) if include_freq else pair[0]
 
     def get_labels(self, include_freq=False, on_unicode_error='strict'):
         """
@@ -267,14 +250,10 @@ class _FastText(object):
         model.
         """
         a = self.f.getArgs()
-        if a.model == model_name.supervised:
-            pair = self.f.getLabels(on_unicode_error)
-            if include_freq:
-                return (pair[0], np.array(pair[1]))
-            else:
-                return pair[0]
-        else:
+        if a.model != model_name.supervised:
             return self.get_words(include_freq)
+        pair = self.f.getLabels(on_unicode_error)
+        return (pair[0], np.array(pair[1])) if include_freq else pair[0]
 
     def get_line(self, text, on_unicode_error='strict'):
         """
@@ -317,9 +296,7 @@ class _FastText(object):
         return self.f.testLabel(path, k, threshold)
 
     def get_meter(self, path, k=-1):
-        meter = _Meter(self, self.f.getMeter(path, k))
-
-        return meter
+        return _Meter(self, self.f.getMeter(path, k))
 
     def quantize(
         self,

@@ -101,7 +101,7 @@ def align(EMB, TRANS, lglist, args):
                 break
             fold = f
             f, nb = 0.0, 0.0
-            for k in range(100 *  (l-1)):
+            for _ in range(100 *  (l-1)):
                 (i,j) = random.choice(samples)
                 embi = EMB[i][np.random.permutation(nmax)[:bsz], :]
                 embj = EMB[j][np.random.permutation(nmax)[:bsz], :]
@@ -128,7 +128,7 @@ def align(EMB, TRANS, lglist, args):
             break
         fold = f
         f, nb = 0.0, 0.0
-        for k in range(round(nmax / args.altbsz) * 10 * (l-1)):
+        for _ in range(round(nmax / args.altbsz) * 10 * (l-1)):
             (i,j) = random.choice(samples)
             sgdidx = np.random.choice(nmax, size=args.altbsz, replace=False)
             embi = EMB[i][sgdidx, :]
@@ -173,26 +173,25 @@ l = len(lglist)
 # embs:
 EMB = {}
 for i in range(l):
-    fn = args.embdir + '/wiki.' + lglist[i] + '.vec'
+    fn = f'{args.embdir}/wiki.{lglist[i]}.vec'
     _, vecs = load_vectors(fn, maxload=args.maxload)
     EMB[i] = vecs
 
 #init
 print("Computing initial bilingual apping with Gromov-Wasserstein...")
-TRANS={}
 maxinit = 2000
 emb0 = EMB[0][:maxinit,:]
 C0 = GWmatrix(emb0)
-TRANS[0] = np.eye(300)
+TRANS = {0: np.eye(300)}
 for i in range(1, l):
-    print("init "+lglist[i])
+    print(f"init {lglist[i]}")
     embi = EMB[i][:maxinit,:]
     TRANS[i] = gromov_wasserstein(embi, emb0, C0)
 
 # align
 align(EMB, TRANS, lglist, args)
 
-print('saving matrices in ' + args.outdir)
+print(f'saving matrices in {args.outdir}')
 languages=''.join(lglist)
 for i in range(l):
-    save_matrix(args.outdir + '/W-' + languages + '-' + lglist[i], TRANS[i])
+    save_matrix(f'{args.outdir}/W-{languages}-{lglist[i]}', TRANS[i])

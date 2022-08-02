@@ -28,14 +28,11 @@ if __name__ == "__main__":
 
     f = load_model(args.model)
     words = f.get_words()
-    print(str(len(words)) + " " + str(f.get_dimension()))
+    print(f"{len(words)} {str(f.get_dimension())}")
     for w in words:
         v = f.get_word_vector(w)
-        vstr = ""
-        for vi in v:
-            vstr += " " + str(vi)
+        vstr = "".join(f" {str(vi)}" for vi in v)
         try:
             print(w + vstr)
         except IOError as e:
-            if e.errno == errno.EPIPE:
-                pass
+            pass

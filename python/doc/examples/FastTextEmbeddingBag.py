@@ -66,7 +66,7 @@ if __name__ == "__main__":
             for _ in range(random.randint(15, 25))
         ]
         total_words += len(words)
-        words_average_length = sum([len(word) for word in words]) / len(words)
+        words_average_length = sum(len(word) for word in words) / len(words)
         start = time.clock()
         words_emb = ft_emb(words)
         total_seconds += (time.clock() - start)

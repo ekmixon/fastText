@@ -62,7 +62,7 @@ def get_random_unicode(length):
         for current_range in include_ranges
         for code_point in range(current_range[0], current_range[1] + 1)
     ]
-    return ''.join(random.choice(alphabet) for i in range(length))
+    return ''.join(random.choice(alphabet) for _ in range(length))
 
 
 def get_random_words(N, a=1, b=20, unique=True):
@@ -70,10 +70,7 @@ def get_random_words(N, a=1, b=20, unique=True):
     while (len(words) < N):
         length = random.randint(a, b)
         word = get_random_unicode(length)
-        if unique and word not in words:
-            words.append(word)
-        else:
-            words.append(word)
+        words.append(word)
     return words
 
 
@@ -123,7 +120,7 @@ def build_supervised_model(data, kwargs):
     kwargs = default_kwargs(kwargs)
     with tempfile.NamedTemporaryFile(delete=False) as tmpf:
         for line in data:
-            line = "__label__" + line.strip() + "\n"
+            line = f"__label__{line.strip()}" + "\n"
             tmpf.write(line.encode("UTF-8"))
         tmpf.flush()
         model = train_supervised(input=tmpf.name, **kwargs)
@@ -191,17 +188,13 @@ class TestFastTextUnitPy(unittest.TestCase):
             train_data = data[:2 * third]
             valid_data = data[third:]
             with tempfile.NamedTemporaryFile(
-                delete=False
-            ) as tmpf, tempfile.NamedTemporaryFile(delete=False) as tmpf2:
+                        delete=False
+                    ) as tmpf, tempfile.NamedTemporaryFile(delete=False) as tmpf2:
                 for line in train_data:
-                    tmpf.write(
-                        ("__label__" + line.strip() + "\n").encode("UTF-8")
-                    )
+                    tmpf.write((f"__label__{line.strip()}" + "\n").encode("UTF-8"))
                 tmpf.flush()
                 for line in valid_data:
-                    tmpf2.write(
-                        ("__label__" + line.strip() + "\n").encode("UTF-8")
-                    )
+                    tmpf2.write((f"__label__{line.strip()}" + "\n").encode("UTF-8"))
                 tmpf2.flush()
                 model = train_supervised(input=tmpf.name, **kwargs)
                 true_labels = []
@@ -348,13 +341,12 @@ class TestFastTextUnitPy(unittest.TestCase):
 
             # Build word vector from subwords
             subwords, subinds = f.get_subwords(word)
-            subvectors = list(map(lambda x: f.get_input_vector(x), subinds))
-            if len(subvectors) == 0:
-                vec2 = np.zeros((f.get_dimension(), ))
-            else:
+            if subvectors := list(map(lambda x: f.get_input_vector(x), subinds)):
                 subvectors = np.vstack(subvectors)
                 vec2 = np.sum((subvectors / len(subwords)), 0)
 
+            else:
+                vec2 = np.zeros((f.get_dimension(), ))
             # Build word vector from subinds
             if len(subinds) == 0:
                 vec3 = np.zeros((f.get_dimension(), ))
@@ -368,7 +360,7 @@ class TestFastTextUnitPy(unittest.TestCase):
                 swids.append(wid)
             else:
                 swids = list(map(lambda x: f.get_subword_id(x), subwords))
-            if len(swids) == 0:
+            if not swids:
                 vec4 = np.zeros((f.get_dimension(), ))
             else:
                 swids = np.array(swids)
@@ -466,29 +458,38 @@ def gen_sup_test(configuration, data_dir):
         def check(model, model_filename, test, lessthan, msg_prefix=""):
             N_local_out, p1_local_out, r1_local_out = model.test(test["data"])
             self.assertEqual(
-                N_local_out, test["n"], msg_prefix + "N: Want: " +
-                str(test["n"]) + " Is: " + str(N_local_out)
+                N_local_out,
+                test["n"],
+                ((f"{msg_prefix}N: Want: " + str(test["n"])) + " Is: ")
+                + str(N_local_out),
             )
+
             self.assertTrue(
-                p1_local_out >= test["p1"], msg_prefix + "p1: Want: " +
-                str(test["p1"]) + " Is: " + str(p1_local_out)
+                p1_local_out >= test["p1"],
+                ((f"{msg_prefix}p1: Want: " + str(test["p1"])) + " Is: ")
+                + str(p1_local_out),
             )
+
             self.assertTrue(
-                r1_local_out >= test["r1"], msg_prefix + "r1: Want: " +
-                str(test["r1"]) + " Is: " + str(r1_local_out)
+                r1_local_out >= test["r1"],
+                ((f"{msg_prefix}r1: Want: " + str(test["r1"])) + " Is: ")
+                + str(r1_local_out),
             )
+
             path_size = get_path_size(model_filename)
             size_msg = str(test["size"]) + " Is: " + str(path_size)
             if lessthan:
                 self.assertTrue(
                     path_size <= test["size"],
-                    msg_prefix + "Size: Want at most: " + size_msg
+                    f"{msg_prefix}Size: Want at most: {size_msg}",
                 )
+
             else:
                 self.assertTrue(
                     path_size == test["size"],
-                    msg_prefix + "Size: Want: " + size_msg
+                    f"{msg_prefix}Size: Want: {size_msg}",
                 )
+
 
         configuration["args"]["input"] = os.path.join(
             data_dir, configuration["args"]["input"]
@@ -501,24 +502,26 @@ def gen_sup_test(configuration, data_dir):
         output = os.path.join(tempfile.mkdtemp(), configuration["dataset"])
         print()
         model = train_supervised(**configuration["args"])
-        model.save_model(output + ".bin")
+        model.save_model(f"{output}.bin")
         check(
             model,
-            output + ".bin",
+            f"{output}.bin",
             configuration["test"],
             False,
-            msg_prefix="Supervised: "
+            msg_prefix="Supervised: ",
         )
+
         print()
         model.quantize(**configuration["quant_args"])
-        model.save_model(output + ".ftz")
+        model.save_model(f"{output}.ftz")
         check(
             model,
-            output + ".ftz",
+            f"{output}.ftz",
             configuration["quant_test"],
             True,
-            msg_prefix="Quantized: "
+            msg_prefix="Quantized: ",
         )
+
 
     return sup_test
 
@@ -586,8 +589,10 @@ def gen_unit_tests(verbose=0):
             kwargs["verbose"] = verbose
 
             def test(self):
-                return getattr(TestFastTextUnitPy,
-                               "gen_" + test_name)(self, copy.deepcopy(kwargs))
+                return getattr(TestFastTextUnitPy, f"gen_{test_name}")(
+                    self, copy.deepcopy(kwargs)
+                )
+
 
             return test
 
@@ -595,35 +600,41 @@ def gen_unit_tests(verbose=0):
         if "_unsupervised_" in test_name:
             for i, setting in enumerate(unsupervised_settings):
                 setattr(
-                    TestFastTextUnitPy, test_name + "_" + str(i),
-                    build_test(test_name, setting)
+                    TestFastTextUnitPy,
+                    f"{test_name}_{str(i)}",
+                    build_test(test_name, setting),
                 )
+
         elif "_supervised_" in test_name:
             for i, setting in enumerate(supervised_settings):
                 setattr(
-                    TestFastTextUnitPy, test_name + "_" + str(i),
-                    build_test(test_name, setting)
+                    TestFastTextUnitPy,
+                    f"{test_name}_{str(i)}",
+                    build_test(test_name, setting),
                 )
+
         else:
             for i, setting in enumerate(general_settings):
                 setattr(
-                    TestFastTextUnitPy, test_name + "_" + str(i),
-                    build_test(test_name, setting)
+                    TestFastTextUnitPy,
+                    f"{test_name}_{str(i)}",
+                    build_test(test_name, setting),
                 )
+
 
     return TestFastTextUnitPy
 
 
 def gen_tests(data_dir, verbose=1):
+
     class TestFastTextPy(unittest.TestCase):
         pass
 
-    i = 0
-    for configuration in get_supervised_models(verbose=verbose):
+    for i, configuration in enumerate(get_supervised_models(verbose=verbose)):
         setattr(
             TestFastTextPy,
-            "test_sup_" + str(i) + "_" + configuration["dataset"],
-            gen_sup_test(configuration, data_dir)
+            f"test_sup_{str(i)}_" + configuration["dataset"],
+            gen_sup_test(configuration, data_dir),
         )
-        i += 1
+
     return TestFastTextPy
